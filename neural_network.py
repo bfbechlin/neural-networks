@@ -1,6 +1,5 @@
 from neural_layer import NeuralLayer
 
-
 class NeuralNetwork:
     def __init__(self, layers):
         self.layer = (

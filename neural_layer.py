@@ -18,10 +18,10 @@ class NeuralLayer:
         outputs: number of outputs neurons
         thetas: initial paramaters of each feature
     '''
-    def __init__(self, *args, **kwargs):
-        self.inputs = kwargs.get('inputs', 1)
-        self.outputs = kwargs.get('outputs', 1)
-        self.thetas = kwargs.get('thetas', np.random.rand(self.outputs, self.inputs + 1))
+    def __init__(self, inputs=1, outputs=1, thetas=None):
+        self.inputs = inputs
+        self.outputs = outputs
+        self.thetas = np.random.rand(self.outputs, self.inputs + 1) if thetas is None else np.array(thetas)
         self.reset()
         
     def reset(self):
@@ -38,7 +38,8 @@ class NeuralLayer:
         x = np.vstack([1., inputs])
         z = np.dot(self.thetas, x)
         self.a = G(z)
-        return self.a
+        self.n += 1
+        return self.a 
 
     def computeRegularization(self, includeBias=False):
         factors = POW(self.a)
@@ -50,10 +51,10 @@ class NeuralLayer:
         if isLast:
             self.delta = self.a - deltaNL
         else:
-            confidence = np.dot(self.a, (1 - self.a))
-            self.delta = np.dot(np.dot(np.transpose(self.thetas), deltaNL), confidence)
+            aux = np.dot(np.transpose(self.thetas), deltaNL)
+            aux = np.dot(aux, self.a)
+            self.delta = np.dot(aux, (1 - self.a))
         self.D = self.D + np.dot(self.delta, np.transpose(self.a))
-        self.n += 1
         return self.delta
 
     def updateThetas(self, ALFA, LAMBDA):
