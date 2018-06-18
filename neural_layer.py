@@ -24,44 +24,45 @@ class NeuralLayer:
         self.thetas = np.random.rand(self.outputs, self.inputs + 1) if thetas is None else np.array(thetas)
         self.reset()
         
+    @property
+    def thetasNoBias(self):
+        cp = np.array(self.thetas)
+        cp[:, 0] = 0
+        return cp
+
     def reset(self):
+        self.x = np.zeros((self.inputs, 1))
         self.a = np.zeros((self.outputs, 1))
-        self.delta = np.zeros((self.outputs, 1))
         self.D = np.zeros((self.outputs, 1))
-        self.n = 0
 
     '''
         Compute the activations
         Must not contains bias on input
     '''
     def computeActivations(self, inputs):
-        x = np.vstack([1., inputs])
-        z = np.dot(self.thetas, x)
+        self.x = np.vstack((1., inputs)) 
+        z = np.dot(self.thetas, self.x)
         self.a = G(z)
-        self.n += 1
         return self.a 
 
     def computeRegularization(self, includeBias=False):
         factors = POW(self.a)
         if not includeBias:
-            factors = _removeBias(factors)
+            factors = self.thetasNoBias
         return factors.sum()
 
-    def computeDelta(self, deltaNL, isLast=False):
-        if isLast:
-            self.delta = self.a - deltaNL
-        else:
-            aux = np.dot(np.transpose(self.thetas), deltaNL)
-            aux = np.dot(aux, self.a)
-            self.delta = np.dot(aux, (1 - self.a))
-        self.D = self.D + np.dot(self.delta, np.transpose(self.a))
-        return self.delta
+    def computeDeltas(self, deltaNL):
+        confidence = np.multiply(self.x, (1 - self.x))
+        delta = np.multiply(np.dot(np.transpose(self.thetas), deltaNL), confidence)
+        return np.delete(delta, (0), axis=0)
 
-    def updateThetas(self, ALFA, LAMBDA):
-        try:
-            D = 1 / self.n * (self.D + LAMBDA * _removeBias(self.thetas))
-        except:
-            D = 0
+    def computeAndUpdateGrads(self, deltaNL):
+        D = np.dot(deltaNL, np.transpose(self.x))
+        self.D = self.D + D
+        return D
+
+    def updateThetas(self, n, ALFA, LAMBDA):
+        D = 1.0 / n * (self.D + LAMBDA * self.thetasNoBias)
         self.thetas = self.thetas - ALFA * D
 
 if __name__ == '__main__':

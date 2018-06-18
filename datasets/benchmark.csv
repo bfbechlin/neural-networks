@@ -1,0 +1,15 @@
+tempo,temperatura,umidade,ventoso,joga
+ensolarado,quente,alta,falso,nao
+ensolarado,quente,alta,verdadeiro,nao
+nublado,quente,alta,falso,sim
+chuvoso,amena,alta,falso,sim
+chuvoso,fria,normal,falso,sim
+chuvoso,fria,normal,verdadeiro,nao
+nublado,fria,normal,verdadeiro,sim
+ensolarado,amena,alta,falso,nao
+ensolarado,fria,normal,falso,sim
+chuvoso,amena,normal,falso,sim
+ensolarado,amena,normal,verdadeiro,sim
+nublado,amena,alta,verdadeiro,sim
+nublado,quente,normal,falso,sim
+chuvoso,amena,alta,verdadeiro,nao
