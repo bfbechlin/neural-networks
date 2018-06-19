@@ -40,6 +40,43 @@ J = (
 )
 Jtotal = 1.90351
 grads = (
+    (
+        [
+            [-0.00087, -0.00028, -0.00059],
+			[-0.00133, -0.00043, -0.00091],
+			[-0.00053, -0.00017, -0.00036],
+			[-0.00070, -0.00022, -0.00048]
+        ],
+        [
+            [0.00639, 0.00433, 0.00482, 0.00376, 0.00451],
+			[-0.00925, -0.00626, -0.00698, -0.00544, -0.00653],
+			[-0.00779, -0.00527, -0.00587, -0.00458, -0.00550],
+        ],
+        [
+            [0.08318, 0.07280, 0.07427, 0.06777],
+			[-0.13868, -0.12138, -0.12384, -0.11300]
+        ]
+    ),
+    (
+        [
+            [0.01694, 0.01406, 0.00034],
+			[0.01465, 0.01216, 0.00029],
+			[0.01999, 0.01659, 0.00040],
+			[0.01622, 0.01346, 0.00032]
+        ],
+        [
+            [0.01503, 0.00954, 0.01042, 0.00818, 0.00972],
+			[0.05809, 0.03687, 0.04025, 0.03160, 0.03756],
+			[0.06892, 0.04374, 0.04775, 0.03748, 0.04456]
+        ],
+        [
+            [0.07953, 0.06841, 0.07025, 0.06346],
+			[0.55832, 0.48027, 0.49320, 0.44549]
+        ]
+
+    )
+)
+gradsTotal = (
     [
         [0.00804, 0.02564, 0.04987],
         [0.00666, 0.01837, 0.06719],
@@ -56,6 +93,7 @@ grads = (
         [0.20982, 0.19195, 0.30343, 0.25249]
     ]
 )
+
 
 class NeuralLayerTest(TestCase):
     def setUp(self):
@@ -114,7 +152,7 @@ class NeuralLayerTest(TestCase):
         
         for i, layer in enumerate(self.network.layers):
             assert_array_almost_equal(layer.updateThetas(len(examples), 0, self.network.LAMBDA), 
-                array(grads[i]), decimal=5)
+                array(gradsTotal[i]), decimal=5)
 
     def test_J(self):
         for i, (output, predicted) in enumerate(zip(outputs, predicteds)):
@@ -129,6 +167,18 @@ class NeuralLayerTest(TestCase):
             pred = self.network._atributesToInputs(predicted)
             self.network.J += self.network._J(out, pred).sum()
         self.assertAlmostEqual(self.network.computeCost(len(outputs)), Jtotal, places=4)
+
+    def test_train_turn(self):
+        datapoints = [
+            (self.network._atributesToInputs(input), self.network._atributesToInputs(output)) 
+            for input, output in zip(examples, outputs)
+        ]
+        err = self.network.trainTurn(datapoints)
+        for i, layer in enumerate(self.network.layers):
+            grad = layer.D
+            print(grad)
+            assert_array_almost_equal(grad, array(gradsTotal[i]), decimal=5)
+        print(err)
 
 if __name__ == '__main__':
   main()

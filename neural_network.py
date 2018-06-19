@@ -6,7 +6,7 @@ def J_f(y, p):
     return -1.0 * (y * math.log(p) + (1 - y) * math.log(1 - p))
 
 class NeuralNetwork:
-    def __init__(self, network, thetas=None, K=0, ALPHA=0.001, LAMBDA=0):
+    def __init__(self, network, thetas=None, K=0, ALPHA=0.001, LAMBDA=0, STOP=0.001):
         self.inputs = network[0]
         self.outputs = network[-1]
         self.layers = [NeuralLayer(network[i], network[i+1], None if thetas is None else thetas[i]) for i in range(0, len(network)-1)]
@@ -14,6 +14,7 @@ class NeuralNetwork:
         self.K = K
         self.ALPHA = ALPHA
         self.LAMBDA = LAMBDA
+        self.STOP = STOP
 
     def _labelToOutputs(self, label):
         out = np.zeros((self.outputs, 1))
@@ -65,11 +66,11 @@ class NeuralNetwork:
             layer.reset()
 
     def updateTethas(self, n):
-        gradsAcc = 0
+        #gradsAcc = 0
         for layer in self.layers:
             grads = layer.updateThetas(n, self.ALPHA, self.LAMBDA)
-            gradsAcc = np.sum(grads ** 2)
-        return gradsAcc
+            #gradsAcc = np.sum(grads ** 2)
+        return np.sum(grads ** 2)
 
     def computeCost(self, n):
         J = float(self.J) / n
@@ -78,10 +79,17 @@ class NeuralNetwork:
             regAcc += layer.computeRegularization()
         S = float(self.LAMBDA) / (2.0 *  n) * regAcc
         return J + S
-        
+
+    def trainTurn(self, datapoints):
+        self.resetLayers()
+        for (inputs, outputs) in datapoints:
+            predictions = self.forwardPropagation(inputs)
+            self.backPropagation(outputs - predictions)
+        return self.updateTethas(len(datapoints))
+
     def train(self, dataset):
         for batch in self._batchGroups(dataset):
-            self.resetLayers()
+            
             for datapoint in batch:
                 outputs = self.forwardPropagation(self._atributesToInputs(datapoint.atributes))
                 self.backPropagation(outputs - self._labelToOutputs(datapoint.label))
