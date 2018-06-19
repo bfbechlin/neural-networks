@@ -1,6 +1,6 @@
 from unittest import TestCase, main
 from neural_network import NeuralNetwork
-from numpy import array, vstack
+import numpy as np
 from numpy.testing import assert_array_almost_equal
 from data import Datapoint
 
@@ -103,7 +103,7 @@ class NeuralLayerTest(TestCase):
         for i, layer in enumerate(self.network.layers):
             self.assertEqual(layer.inputs, network[i])
             self.assertEqual(layer.outputs, network[i+1])
-            assert_array_almost_equal(layer.thetas, array(thetas[i]), decimal=5)
+            assert_array_almost_equal(layer.thetas, np.array(thetas[i]), decimal=5)
 
     def test_labelToOutputs(self):
         label0 = [
@@ -114,8 +114,8 @@ class NeuralLayerTest(TestCase):
             [0],
             [1.0]
         ]
-        assert_array_almost_equal(self.network._labelToOutputs(0), array(label0), decimal=5)
-        assert_array_almost_equal(self.network._labelToOutputs(1), array(label1), decimal=5)
+        assert_array_almost_equal(self.network._labelToOutputs(0), np.array(label0), decimal=5)
+        assert_array_almost_equal(self.network._labelToOutputs(1), np.array(label1), decimal=5)
 
     def test_outputsToLabel(self):
         label0 = [
@@ -131,7 +131,7 @@ class NeuralLayerTest(TestCase):
     
     def test_atributesToInputs(self):
         attr1 = [1.0, 0.56, 0]
-        assert_array_almost_equal(self.network._atributesToInputs(attr1), array([[1.0], [0.56], [0]]), decimal=5)
+        assert_array_almost_equal(self.network._atributesToInputs(attr1), np.array([[1.0], [0.56], [0]]), decimal=5)
 
     def test_batchGroups(self):
         dataset = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
@@ -152,7 +152,7 @@ class NeuralLayerTest(TestCase):
         
         for i, layer in enumerate(self.network.layers):
             assert_array_almost_equal(layer.updateThetas(len(examples), 0, self.network.LAMBDA), 
-                array(gradsTotal[i]), decimal=5)
+                np.array(gradsTotal[i]), decimal=5)
 
     def test_J(self):
         for i, (output, predicted) in enumerate(zip(outputs, predicteds)):
@@ -168,7 +168,7 @@ class NeuralLayerTest(TestCase):
             self.network.J += self.network._J(out, pred).sum()
         self.assertAlmostEqual(self.network.computeCost(len(outputs)), Jtotal, places=4)
 
-    def test_train_turn(self):
+    def test_trainTurn(self):
         datapoints = [
             (self.network._atributesToInputs(input), self.network._atributesToInputs(output)) 
             for input, output in zip(examples, outputs)
@@ -176,9 +176,8 @@ class NeuralLayerTest(TestCase):
         err = self.network.trainTurn(datapoints)
         for i, layer in enumerate(self.network.layers):
             grad = layer.D
-            print(grad)
-            assert_array_almost_equal(grad, array(gradsTotal[i]), decimal=5)
-        print(err)
+            assert_array_almost_equal(grad, np.array(gradsTotal[i]), decimal=5)
+        self.assertAlmostEqual(err, np.sum(grad**2), places=5)
 
 if __name__ == '__main__':
   main()

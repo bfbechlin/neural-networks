@@ -22,9 +22,9 @@ class NeuralLayer:
         return cp
 
     def reset(self):
-        self.x = np.zeros((self.inputs, 1))
-        self.a = np.zeros((self.outputs, 1))
-        self.D = np.zeros((self.outputs, 1))
+        self.x = 0
+        self.a = 0
+        self.D = 0
 
     def computeActivations(self, inputs):
         self.x = np.vstack((1., inputs)) 
@@ -47,9 +47,9 @@ class NeuralLayer:
         return D
 
     def updateThetas(self, n, ALPHA, LAMBDA):
-        D = 1.0 / n * (self.D + LAMBDA * self.thetasNoBias)
-        self.thetas = self.thetas - ALPHA * D
-        return D
+        self.D = 1.0 / n * (self.D + LAMBDA * self.thetasNoBias)
+        self.thetas = self.thetas - ALPHA * self.D
+        return self.D
 
 if __name__ == '__main__':
     a = NeuralLayer(thetas=np.array([[0.4, 0.1], [0.3, 0.2]]))

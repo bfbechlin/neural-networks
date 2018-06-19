@@ -84,7 +84,7 @@ class NeuralNetwork:
         self.resetLayers()
         for (inputs, outputs) in datapoints:
             predictions = self.forwardPropagation(inputs)
-            self.backPropagation(outputs - predictions)
+            self.backPropagation(predictions - outputs)
         return self.updateTethas(len(datapoints))
 
     def train(self, dataset):
