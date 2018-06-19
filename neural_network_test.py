@@ -34,6 +34,11 @@ predicteds = (
     [0.83318, 0.84132],
     [0.82953, 0.83832]
 )
+J = (
+    [0.791],
+    [1.944]
+)
+Jtotal = 1.90351
 grads = (
     [
         [0.00804, 0.02564, 0.04987],
@@ -98,18 +103,32 @@ class NeuralLayerTest(TestCase):
         for example, predicted in zip(examples, predicteds):
             ex = self.network._atributesToInputs(example)
             pred = self.network._atributesToInputs(predicted)
-            assert_array_almost_equal(self.network._forwardPropagation(ex), pred, decimal=5)
+            assert_array_almost_equal(self.network.forwardPropagation(ex), pred, decimal=5)
 
     def test_backPropagation(self):
         for example, output in zip(examples, outputs):
             ex = self.network._atributesToInputs(example)
             out = self.network._atributesToInputs(output)
-            pred = self.network._forwardPropagation(ex)
-            self.network._backPropagation(pred - out)
+            pred = self.network.forwardPropagation(ex)
+            self.network.backPropagation(pred - out)
         
         for i, layer in enumerate(self.network.layers):
             assert_array_almost_equal(layer.updateThetas(len(examples), 0, self.network.LAMBDA), 
                 array(grads[i]), decimal=5)
+
+    def test_J(self):
+        for i, (output, predicted) in enumerate(zip(outputs, predicteds)):
+            out = self.network._atributesToInputs(output)
+            pred = self.network._atributesToInputs(predicted)
+            Jvec = self.network._J(out, pred)
+            self.assertAlmostEqual(Jvec.sum(), J[i], places=3)
+
+    def test_cost_computation(self):
+        for output, predicted in zip(outputs, predicteds):
+            out = self.network._atributesToInputs(output)
+            pred = self.network._atributesToInputs(predicted)
+            self.network.J += self.network._J(out, pred).sum()
+        self.assertAlmostEqual(self.network.computeCost(len(outputs)), Jtotal, places=4)
 
 if __name__ == '__main__':
   main()

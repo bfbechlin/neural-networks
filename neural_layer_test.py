@@ -136,7 +136,6 @@ class NeuralLayerTest(TestCase):
             for j, layer in enumerate(self.layers):
                 layer.gradSpec = array(grads[i][j])
                 layer.deltaSpec = array(deltas[i][j])
-                layer.gradTotalSpec = array(gradsTotal[j])
 
                 assert_array_almost_equal(act, array(activations[i][j]), decimal=5)
                 act = layer.computeActivations(act)
@@ -151,8 +150,9 @@ class NeuralLayerTest(TestCase):
                     assert_array_almost_equal(delta, layer.deltaSpec, decimal=5)
                     delta = layer.computeDeltas(delta)
                     
-        for layer in self.layers:
-            assert_array_almost_equal(layer.updateThetas(len(examples), 0, 0), layer.gradTotalSpec, decimal=5)
+        for i, layer in enumerate(self.layers):
+            assert_array_almost_equal(layer.updateThetas(len(examples), 0, 0), 
+                gradsTotal[i], decimal=5)
 
 if __name__ == '__main__':
     main()
