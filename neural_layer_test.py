@@ -105,8 +105,8 @@ class NeuralLayerTest(TestCase):
           delta = layer.computeDeltas(delta)
           assert_array_almost_equal(delta, layer.deltaSpec, decimal=5)
 
-      for i, layer in enumerate(self.ex1):
-        assert_array_almost_equal(layer.D, layer.gradSpec, decimal=5)
+    for i, layer in enumerate(self.ex1):
+      assert_array_almost_equal(layer.updateThetas(len(examples1), 0, 0), layer.gradSpec, decimal=5)
 
 if __name__ == '__main__':
   main()

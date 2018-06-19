@@ -2,7 +2,6 @@ import numpy as np
 import math
 
 G = np.vectorize(lambda x: 1 / (1 + math.exp(-x)))
-POW = np.vectorize(lambda x: x**2)
 
 class NeuralLayer:
     '''
@@ -27,10 +26,6 @@ class NeuralLayer:
         self.a = np.zeros((self.outputs, 1))
         self.D = np.zeros((self.outputs, 1))
 
-    '''
-        Compute the activations
-        Must not contains bias on input
-    '''
     def computeActivations(self, inputs):
         self.x = np.vstack((1., inputs)) 
         z = np.dot(self.thetas, self.x)
@@ -38,10 +33,8 @@ class NeuralLayer:
         return self.a 
 
     def computeRegularization(self, includeBias=False):
-        factors = POW(self.a)
-        if not includeBias:
-            factors = self.thetasNoBias
-        return factors.sum()
+        factors = self.thetas if includeBias else self.thetasNoBias
+        return np.sum(factors ** 2)
 
     def computeDeltas(self, deltaNL):
         confidence = np.multiply(self.x, (1 - self.x))
@@ -56,6 +49,7 @@ class NeuralLayer:
     def updateThetas(self, n, ALPHA, LAMBDA):
         D = 1.0 / n * (self.D + LAMBDA * self.thetasNoBias)
         self.thetas = self.thetas - ALPHA * D
+        return D
 
 if __name__ == '__main__':
     a = NeuralLayer(thetas=np.array([[0.4, 0.1], [0.3, 0.2]]))
