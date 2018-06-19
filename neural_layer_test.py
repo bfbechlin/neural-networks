@@ -3,110 +3,156 @@ from neural_layer import NeuralLayer
 from numpy import array, vstack
 from numpy.testing import assert_array_almost_equal
 
-class NeuralLayerTest(TestCase):
-  def setUp(self):
-    self.ex1 = (
-      NeuralLayer(1, 2, [[0.4, 0.1], [0.3, 0.2]]),
-      NeuralLayer(2, 1, [[0.7, 0.5, 0.6]]),
+examples = (
+    [
+        [0.13000]   
+    ],
+    [
+        [0.42000]
+    ]
+)
+outputs = (
+    [
+        [0.90000]        
+    ],
+    [
+        [0.23000]
+    ]
+)
+thetas = (
+    [
+        [0.40000, 0.10000],
+	    [0.30000, 0.20000]
+    ],
+    [
+        [0.70000, 0.50000, 0.60000]
+    ]
+)
+activations = (
+    (
+        [
+            [0.13000]
+        ],
+        [
+            [0.60181],
+            [0.58079]
+        ],
+        [
+            [0.79403]
+        ]
+    ),
+    (
+        [
+            [0.42000]
+        ],
+		
+        [
+            [0.60874],
+            [0.59484]
+        ],
+        [
+            [0.79597]
+        ]
     )
-
-  def addBais(self, inputs):
-    return vstack((array(1.), array(inputs)))
-
-  def test_activation_forward(self):
-    results = (
-      [[0.13]], 
-      [[0.601807], [0.5807858]], 
-      [[0.794027]]
-    )
-    for i, layer in enumerate(self.ex1):
-      activations = layer.computeActivations(array(results[i]))
-      spectation = array(results[i+1])
-      assert_array_almost_equal(activations, spectation)
-      assert_array_almost_equal(layer.a, spectation)
-
-  def test_delta_computation(self):
-    examples1 = [
-      {
-        'x': 0.13000, 
-        'p': 0.794027, 
-        'y': 0.90000,
-        'D': (
-          [ 
-            [-0.01270,  -0.00165],
-            [-0.01548,  -0.00201]
-          ],
-          [
-            [-0.10597,  -0.06378,  -0.06155]
-          ]
-        ),
-        'deltas': (
-          [],
-          [
-            [-0.01270], 
-            [-0.01548]
-          ],
-          [
-            [-0.10597]
-          ]
-        )
-      }, 
-      {
-        'x': 0.42000, 
-        'p': 0.795966, 
-        'y': 0.23000,
-        'D': (
-          [
+)
+predicteds = (
+    [
+        [0.79403]
+    ],
+    [
+        [0.79597]
+    ]
+)
+grads = (
+    (
+        [
+            [-0.01270, -0.00165],
+	        [-0.01548, -0.00201]
+        ],
+        [
+            [-0.10597, -0.06378, -0.06155]
+        ]
+    ),
+    (
+        [
             [0.06740, 0.02831],
-			      [0.08184, 0.03437]
-          ],
-          [
-            [0.56597,  0.34452,  0.33666]
-          ]
-        ),
-        'deltas': (
-          [],
-          [
-            [0.06740], 
+		    [0.08184, 0.03437]
+        ],
+        [
+            [0.56597, 0.34452, 0.33666]
+        ]
+    )
+)
+deltas = (
+    (
+        [
+            [-0.01270],
+            [-0.01548]
+        ],
+        [
+            [-0.10597]
+        ]
+    ),
+    (
+        [
+            [0.06740],
             [0.08184]
-          ],
-          [
+        ],
+        [
             [0.56597]
-          ]
-        )
-      }
-    ]
-
-    grads1 = [
-      [
+        ]
+    )
+)
+gradsTotal = (
+    [
         [0.02735, 0.01333],
-			  [0.03318, 0.01618]
-      ],
-      [
+		[0.03318, 0.01618]
+    ],
+    [
         [0.23000, 0.14037, 0.13756]
-      ]
-    ]
+    ]  
+)
 
-    for example in examples1:
-      activations = array([[example['x']]])
-      for i, layer in enumerate(self.ex1):
-        activations = layer.computeActivations(activations)
-        layer.DSpec = array(example['D'][i])
-        layer.deltaSpec = array(example['deltas'][i])
-        layer.gradSpec = array(grads1[i])
-      assert_array_almost_equal(activations, array([[example['p']]]), decimal=5)
-      delta = activations - array(example['y'])
-      assert_array_almost_equal(delta, array(example['deltas'][-1]), decimal=5)
+class NeuralLayerTest(TestCase):
+    def setUp(self):
+        self.layers = (
+            NeuralLayer(1, 2, thetas[0]),
+            NeuralLayer(2, 1, thetas[1]),
+        )
 
-      for i, layer in enumerate(reversed(self.ex1)):
-        D = layer.computeAndUpdateGrads(delta)
-        assert_array_almost_equal(D, layer.DSpec, decimal=5)
-        if i != len(self.ex1) - 1:
-          delta = layer.computeDeltas(delta)
-          assert_array_almost_equal(delta, layer.deltaSpec, decimal=5)
+    def addBais(self, inputs):
+        return vstack((array(1.), array(inputs)))
 
-    for i, layer in enumerate(self.ex1):
-      assert_array_almost_equal(layer.updateThetas(len(examples1), 0, 0), layer.gradSpec, decimal=5)
+    def test_activation_forward(self):
+        for i, layer in enumerate(self.layers):
+            act = layer.computeActivations(array(activations[0][i]))
+            spec = array(activations[0][i+1])
+            assert_array_almost_equal(act, spec, decimal=5)
+            assert_array_almost_equal(layer.a, spec, decimal=5)
+
+    def test_delta_and_grads(self):
+        for i, example in enumerate(examples):
+            act = array(example)
+            for j, layer in enumerate(self.layers):
+                layer.gradSpec = array(grads[i][j])
+                layer.deltaSpec = array(deltas[i][j])
+                layer.gradTotalSpec = array(gradsTotal[j])
+
+                assert_array_almost_equal(act, array(activations[i][j]), decimal=5)
+                act = layer.computeActivations(act)
+                
+            delta = act - array(outputs[i])
+            assert_array_almost_equal(delta, array(deltas[i][-1]), decimal=5)
+
+            for j, layer in enumerate(reversed(self.layers)):
+                grad = layer.computeAndUpdateGrads(delta)
+                assert_array_almost_equal(grad, layer.gradSpec, decimal=5)
+                if j != len(self.layers) - 1:
+                    assert_array_almost_equal(delta, layer.deltaSpec, decimal=5)
+                    delta = layer.computeDeltas(delta)
+                    
+        for layer in self.layers:
+            assert_array_almost_equal(layer.updateThetas(len(examples), 0, 0), layer.gradTotalSpec, decimal=5)
 
 if __name__ == '__main__':
-  main()
+    main()
