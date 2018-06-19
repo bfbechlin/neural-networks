@@ -1,16 +1,8 @@
 import numpy as np
 import math
 
-def g(x):
-    return 1 / (1 + math.exp(-x))
-
 G = np.vectorize(lambda x: 1 / (1 + math.exp(-x)))
 POW = np.vectorize(lambda x: x**2)
-
-def _removeBias(matrix):
-        cp = np.array(matrix)
-        cp[:, 0] =  0
-        return cp
 
 class NeuralLayer:
     '''
@@ -61,9 +53,9 @@ class NeuralLayer:
         self.D = self.D + D
         return D
 
-    def updateThetas(self, n, ALFA, LAMBDA):
+    def updateThetas(self, n, ALPHA, LAMBDA):
         D = 1.0 / n * (self.D + LAMBDA * self.thetasNoBias)
-        self.thetas = self.thetas - ALFA * D
+        self.thetas = self.thetas - ALPHA * D
 
 if __name__ == '__main__':
     a = NeuralLayer(thetas=np.array([[0.4, 0.1], [0.3, 0.2]]))
