@@ -17,11 +17,13 @@ class NeuralNetwork:
         self.STOP = STOP
 
     def _labelToOutputs(self, label):
+        #return np.array([[label]])
         out = np.zeros((self.outputs, 1))
         out[label][0] = 1.0
         return out
     
     def _outputsToLabel(self, output):
+        #return 1 if output[0][0] > 0.5 else 0
         maxValue = 0
         maxIndex = 0
         for i, row in enumerate(output):
@@ -36,7 +38,7 @@ class NeuralNetwork:
 
     def _batchGroups(self, dataset):
         if self.K == 0:
-            return dataset
+            return [dataset]
         else:
             return [dataset[i:i + self.K] for i in range(0, len(dataset), self.K)]
 
@@ -66,11 +68,11 @@ class NeuralNetwork:
             layer.reset()
 
     def updateTethas(self, n):
-        #gradsAcc = 0
+        gradsAcc = 0
         for layer in self.layers:
             grads = layer.updateThetas(n, self.ALPHA, self.LAMBDA)
-            #gradsAcc = np.sum(grads ** 2)
-        return np.sum(grads ** 2)
+            gradsAcc += np.sum(grads ** 2)
+        return self.computeCost(n)
 
     def computeCost(self, n):
         J = float(self.J) / n
@@ -80,20 +82,28 @@ class NeuralNetwork:
         S = float(self.LAMBDA) / (2.0 *  n) * regAcc
         return J + S
 
-    def trainTurn(self, datapoints):
+    def trainTurn(self, datapoints, updateCost=False):
         self.resetLayers()
         for (inputs, outputs) in datapoints:
             predictions = self.forwardPropagation(inputs)
             self.backPropagation(predictions - outputs)
+            if updateCost:
+                self.J += np.sum(self._J(outputs, predictions))
         return self.updateTethas(len(datapoints))
 
     def train(self, dataset):
-        for batch in self._batchGroups(dataset):
-            
-            for datapoint in batch:
-                outputs = self.forwardPropagation(self._atributesToInputs(datapoint.atributes))
-                self.backPropagation(outputs - self._labelToOutputs(datapoint.label))
-            self.updateTethas(len(batch))               
+        dataset = [
+            (self._atributesToInputs(datapoint.attributes), self._labelToOutputs(datapoint.label))
+            for datapoint in dataset
+        ]
+        err = float('Inf')
+        while err > self.STOP:
+            err = 0
+            for batch in self._batchGroups(dataset):
+                err += self.trainTurn(batch, True)
+            print(err)
     
     def classify(self, datapoint):
-        return self.forwardPropagation(datapoint.inputs)
+        inputs = self._atributesToInputs(datapoint.attributes)
+        preds = self.forwardPropagation(inputs)
+        return self._outputsToLabel(preds)

@@ -177,7 +177,9 @@ class NeuralLayerTest(TestCase):
         for i, layer in enumerate(self.network.layers):
             grad = layer.D
             assert_array_almost_equal(grad, np.array(gradsTotal[i]), decimal=5)
-        self.assertAlmostEqual(err, np.sum(grad**2), places=5)
+        # self.assertAlmostEqual(err, np.sum(grad**2), places=5)
+        err = self.network.trainTurn(datapoints, updateCost=True)
+        self.assertAlmostEqual(self.network.computeCost(len(examples)), Jtotal, places=2)
 
 if __name__ == '__main__':
   main()
