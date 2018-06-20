@@ -15,7 +15,13 @@ def run(dataset_name, output_file, num_trees_range):
     random.shuffle(dataset)
     inputs = len(dataset[0].attributes)
     outputs = max(data.labels(dataset)) + 1
-    network = NeuralNetwork([inputs, 10, 5, 10, outputs], ALPHA=5, STOP=1.3, LAMBDA=0.25)
+    shape = [inputs, 1, outputs]
+    thetas = [[[0.3, 0.2]], [[0.1, 0.2], [0.3, 0.4]]]
+    print 'dataset', dataset
+    print 'shape', shape
+    print 'thetas', thetas
+    network = NeuralNetwork(shape, thetas=thetas, ALPHA=5, STOP=5, LAMBDA=0.25, K=1)
+    # network = NeuralNetwork(shape, thetas=thetas, ALPHA=5, STOP=float('+inf'), LAMBDA=0.25, K=1)
     network.train(dataset)
     errors = 0
     for datapoint in dataset:
@@ -23,6 +29,6 @@ def run(dataset_name, output_file, num_trees_range):
             errors += 1
     print(errors, errors * 1.0 /len(dataset))
 
-for dataset_name in ['pima']:
+for dataset_name in ['micro']:
 
     run(dataset_name, 'f1-vs-num-trees-' + dataset_name + '.csv', [1, 2, 4, 8, 16, 32, 64, 128])

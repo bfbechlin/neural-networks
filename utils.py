@@ -5,6 +5,11 @@ reader_parameters = {}
 def benchmark_label_to_int(label):
     return {'nao': 0, 'sim': 1}[label]
 
+reader_parameters['micro'] = {
+    'label_column': 1,
+    'cast_functions': [float, int]
+}
+
 reader_parameters['benchmark'] = {
     'label_column': 4,
     'cast_functions': [str]*4 + [benchmark_label_to_int]

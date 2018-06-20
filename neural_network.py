@@ -21,7 +21,7 @@ class NeuralNetwork:
         out = np.zeros((self.outputs, 1))
         out[label][0] = 1.0
         return out
-    
+
     def _outputsToLabel(self, output):
         #return 1 if output[0][0] > 0.5 else 0
         maxValue = 0
@@ -50,8 +50,10 @@ class NeuralNetwork:
 
     def forwardPropagation(self, inputs):
         activations = inputs
+        print 'inputs', inputs
         for layer in self.layers:
             activations = layer.computeActivations(activations)
+            print 'activation', activations
         return activations
 
     def backPropagation(self, lastDelta):
@@ -84,8 +86,10 @@ class NeuralNetwork:
 
     def trainTurn(self, datapoints, updateCost=False):
         self.resetLayers()
+        print 'turn datapoints', datapoints
         for (inputs, outputs) in datapoints:
             predictions = self.forwardPropagation(inputs)
+            print 'predictions', predictions
             self.backPropagation(predictions - outputs)
             if updateCost:
                 self.J += np.sum(self._J(outputs, predictions))
@@ -98,12 +102,17 @@ class NeuralNetwork:
         ]
         err = float('Inf')
         while err > self.STOP:
+            self.STOP = float('+inf')
             err = 0
             for batch in self._batchGroups(dataset):
+                print self
                 err += self.trainTurn(batch, True)
             print(err)
-    
+
     def classify(self, datapoint):
         inputs = self._atributesToInputs(datapoint.attributes)
         preds = self.forwardPropagation(inputs)
         return self._outputsToLabel(preds)
+
+    def __repr__(self):
+        return 'network thetas\n' + '\n'.join([str(l) for l in self.layers])
