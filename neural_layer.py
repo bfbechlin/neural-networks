@@ -23,6 +23,7 @@ class NeuralLayer:
     def reset(self):
         self.a = 0
         self.D = 0
+        self.J = 0
 
     def computeActivations(self, inputs):
         self.a = np.vstack((1., inputs)) 
@@ -47,6 +48,14 @@ class NeuralLayer:
         D = 1.0 / n * (self.D + LAMBDA * self.thetasNoBias)
         self.thetas = self.thetas - ALPHA * D
         return D
+
+    def computeCost(self, n):
+        J = float(self.J) / n
+        regAcc = 0
+        for layer in self.layers:
+            regAcc += layer.computeRegularization()
+        S = float(self.LAMBDA) / (2.0 *  n) * regAcc
+        return J + S
 
 if __name__ == '__main__':
     a = NeuralLayer(thetas=np.array([[0.4, 0.1], [0.3, 0.2]]))

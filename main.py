@@ -1,4 +1,4 @@
-from neural_network import NeuralNetwork
+from new_net import NeuralNetwork
 import data
 import random
 import utils
@@ -13,14 +13,19 @@ def run(dataset_name, output_file, num_trees_range):
     '''
     dataset = data.read_dataset('datasets/' + dataset_name + '.csv', **utils.reader_parameters[dataset_name])
     random.shuffle(dataset)
+    random.shuffle(dataset)
     inputs = len(dataset[0].attributes)
     outputs = max(data.labels(dataset)) + 1
-    network = NeuralNetwork([inputs, 10, 5, 10, outputs], ALPHA=0.5, STOP=0.0001, LAMBDA=0.25)
+    print(dataset[0])
+    
+    print(dataset[-1])
+    network = NeuralNetwork([inputs, 10, 5, 10, outputs], ALPHA=0.1, STOP=0.1, LAMBDA=0)
     network.train(dataset)
     errors = 0
     for datapoint in dataset:
         if network.classify(datapoint) != datapoint.label:
             errors += 1
+            print(datapoint.label)
     print(errors, errors * 1.0 /len(dataset))
 
 for dataset_name in ['pima']:
