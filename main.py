@@ -15,7 +15,7 @@ def run(dataset_name, output_file, num_trees_range):
     random.shuffle(dataset)
     inputs = len(dataset[0].attributes)
     outputs = max(data.labels(dataset)) + 1
-    network = NeuralNetwork([inputs, 10, 5, 10, outputs], ALPHA=0.5, STOP=0.000001, LAMBDA=0.25)
+    network = NeuralNetwork([inputs, 10, 5, 10, outputs], ALPHA=0.5, STOP=0.0001, LAMBDA=0.25)
     network.train(dataset)
     errors = 0
     for datapoint in dataset:

@@ -1,6 +1,6 @@
 from unittest import TestCase, main
 from neural_layer import NeuralLayer
-from numpy import array, vstack
+from numpy import array, vstack, subtract
 from numpy.testing import assert_array_almost_equal
 
 examples = (
@@ -151,8 +151,10 @@ class NeuralLayerTest(TestCase):
                     delta = layer.computeDeltas(delta)
                     
         for i, layer in enumerate(self.layers):
-            assert_array_almost_equal(layer.updateThetas(len(examples), 0, 0), 
+            assert_array_almost_equal(layer.updateThetas(len(examples), 1, 0), 
                 gradsTotal[i], decimal=5)
+            assert_array_almost_equal(layer.thetas, subtract(thetas[i], gradsTotal[i]), decimal=5)
+
 
 if __name__ == '__main__':
     main()
