@@ -1,0 +1,13 @@
+#!/usr/bin/env python
+
+from neural_network_validation import NeuralNetworkValidation
+from utils import decode_matrix_list, decode_network, encode_matrix_list
+import sys
+
+args = sys.argv[1:4]
+network, LAMBDA = decode_network(args[0])
+tethas = decode_matrix_list(args[1])
+dataset = decode_matrix_list(args[2])
+
+net = NeuralNetworkValidation(network, tethas, LAMBDA, dataset)
+print(encode_matrix_list(net.backprogagation()))

@@ -6,7 +6,7 @@ def J_f(y, p):
     return -1.0 * (y * math.log(p) + (1 - y) * math.log(1 - p))
 
 class NeuralNetwork:
-    def __init__(self, network, thetas=None, K=0, ALPHA=0.001, LAMBDA=0, STOP=0.001):
+    def __init__(self, network, thetas=None, LAMBDA=0, ALPHA=0.001, K=0, STOP=0.001):
         self.inputs = network[0]
         self.outputs = network[-1]
         self.layers = [NeuralLayer(network[i], network[i+1], None if thetas is None else thetas[i]) for i in range(0, len(network)-1)]
@@ -17,13 +17,11 @@ class NeuralNetwork:
         self.STOP = STOP
 
     def _labelToOutputs(self, label):
-        #return np.array([[label]])
         out = np.zeros((self.outputs, 1))
         out[label][0] = 1.0
         return out
     
     def _outputsToLabel(self, output):
-        #return 1 if output[0][0] > 0.5 else 0
         maxValue = 0
         maxIndex = 0
         for i, row in enumerate(output):
@@ -72,7 +70,7 @@ class NeuralNetwork:
         for layer in self.layers:
             grads = layer.updateThetas(n, self.ALPHA, self.LAMBDA)
             gradsAcc += np.sum(grads ** 2)
-        return self.computeCost(n)
+        return gradsAcc
 
     def computeCost(self, n):
         J = float(self.J) / n
@@ -100,10 +98,11 @@ class NeuralNetwork:
         while err > self.STOP:
             err = 0
             for batch in self._batchGroups(dataset):
-                err += self.trainTurn(batch, True)
+                err += self.trainTurn(batch)
             print(err)
     
     def classify(self, datapoint):
         inputs = self._atributesToInputs(datapoint.attributes)
         preds = self.forwardPropagation(inputs)
         return self._outputsToLabel(preds)
+

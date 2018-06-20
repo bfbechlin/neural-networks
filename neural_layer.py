@@ -48,7 +48,7 @@ class NeuralLayer:
 
     def updateThetas(self, n, ALPHA, LAMBDA):
         self.D = 1.0 / n * (self.D + LAMBDA * self.thetasNoBias)
-        self.thetas = self.thetas - ALPHA * self.D
+        self.thetas -= ALPHA * self.D
         return self.D
 
 if __name__ == '__main__':

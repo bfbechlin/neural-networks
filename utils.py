@@ -46,3 +46,40 @@ def majority_vote(l):
     '''
     c = collections.Counter(l)
     return c.most_common()[0][0]
+
+def decode_matrix_list(file_name):
+    result = []
+    with open(file_name) as f:
+        for line in f:
+            rows = line.split(';')
+            rowList = []
+            for row in rows:
+                numbers = row.split(',')
+                rowList.append([float(n) for n in numbers])
+            result.append(rowList)
+    return result
+
+def encode_matrix_list(matrix_list):
+    string = ''
+    for k, matrix in enumerate(matrix_list):
+        for j, line in enumerate(matrix):
+            for i, number in enumerate(line):
+                string += '{0:.5f}'.format(round(number,5))
+                if i != len(line) - 1:
+                    string += ', '
+            if j != len(matrix) - 1:
+                string += '; '
+        if k != len(matrix_list) - 1:
+            string += '\n'
+    return string 
+
+def decode_network(file_name):
+    LAMBDA = 0
+    network = []
+    with open(file_name) as f:
+        for i, line in enumerate(f):
+            if i == 0:
+                LAMBDA = float(line)
+            else:
+                network.append(int(line))
+    return network, LAMBDA
