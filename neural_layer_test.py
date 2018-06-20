@@ -128,7 +128,6 @@ class NeuralLayerTest(TestCase):
             act = layer.computeActivations(array(activations[0][i]))
             spec = array(activations[0][i+1])
             assert_array_almost_equal(act, spec, decimal=5)
-            assert_array_almost_equal(layer.a, spec, decimal=5)
 
     def test_delta_and_grads(self):
         for i, example in enumerate(examples):
