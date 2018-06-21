@@ -19,7 +19,7 @@ def run(dataset_name, output_file, num_trees_range):
     print(dataset[0])
     
     print(dataset[-1])
-    network = NeuralNetwork([inputs, 10, 5, 10, outputs], ALPHA=0.1, STOP=0.1, LAMBDA=0)
+    network = NeuralNetwork([inputs, 8, outputs], ALPHA=1, STOP=0.1, LAMBDA=0, K=100)
     network.train(dataset)
     errors = 0
     for datapoint in dataset:

@@ -1,9 +1,10 @@
-from copy import copy
+from copy import deepcopy, copy
 import numpy as np
 import math
 
 G = np.vectorize(lambda x: 1 / (1 + math.exp(-x)))
-J = lambda y, p: -1.0 * (y * math.log(p) + (1 - y) * math.log(1 - p))
+def J(y, p):
+    return -1.0 * (y * math.log(p) + (1 - y) * math.log(1 - p))
 
 def toVector(array):
     return np.transpose(np.array([array]))
@@ -21,14 +22,17 @@ def removeBiasMatrix(matrix):
 
 class NeuralNetwork:
     def __init__(self, network, thetas=None, LAMBDA=0, ALPHA=0.001, K=0, STOP=0.001):
-        self.network = len(network) - 1
+        self.network = network
         self.inputs = network[0]
         self.outputs = network[-1]
-
+        self.layers = len(network) - 1
+        self.sizes = [(network[i+1], network[i] + 1) for i in range(0, len(network) - 1)]
         if thetas is None:
-            self.thetas = [(np.random.rand(network[i+1], network[i] + 1) * 2 - 1) for i in range(0, self.network)]
+            self.thetas = [(np.random.rand(l, c) * 2 - 1.0) for (l, c) in self.sizes]
         else:
             self.thetas = [np.array(theta) for theta in thetas]
+        self.a = [None] * (self.layers + 1)
+        self.deltas = [None] * (self.layers + 1)
         self.reset()
 
         self.K = K
@@ -37,9 +41,7 @@ class NeuralNetwork:
         self.STOP = STOP
     
     def reset(self):
-        self.a = [0] * (self.network + 1)
-        self.deltas = [0] * (self.network + 1)
-        self.D = [0] * self.network
+        self.D = [np.zeros(size) for size in self.sizes]
         self.J = 0.0
 
     def labelToOutputs(self, label):
@@ -64,45 +66,46 @@ class NeuralNetwork:
             return [dataset[i:i + self.K] for i in range(0, len(dataset), self.K)]
 
     def forwardPropagation(self, inputs):
-        self.a[0] = addBias(inputs)
-        for i in range(self.network):
+        self.a[0] = inputs
+        for i in range(self.layers):
+            self.a[i] = addBias(self.a[i])
             z = np.dot(self.thetas[i], self.a[i])
-            self.a[i+1] = addBias(G(z))
-        return removeBias(self.a[-1])
+            self.a[i+1] = G(z)
+        return self.a[-1]
     
     def backPropagation(self, delta):
-        self.deltas[self.network] = copy(delta)
-        for j in reversed(range(1, self.network + 1)):
+        self.deltas[self.layers] = copy(delta)
+        for j in reversed(range(1, self.layers + 1)):
             i = j - 1
-            confidence = np.multiply(self.a[i], (1 - self.a[i]))
+            confidence = (self.a[i] * (1 - self.a[i]))
             delta = np.multiply(np.dot(np.transpose(self.thetas[i]), self.deltas[j]), confidence)
             self.deltas[i] = np.delete(delta, (0), axis=0)
-        for i in range(self.network):
+        for i in range(self.layers):
             self.D[i] = self.D[i] + np.dot(self.deltas[i + 1], np.transpose(self.a[i]))
 
     def computeCost(self, n):
         regAcc = 0
-        for i in range(self.network):
-            regAcc += np.sum(removeBiasMatrix(self.thetas[i]))
+        for i in range(self.layers):
+            regAcc += np.sum(removeBiasMatrix(self.thetas[i]) ** 2)
         S = self.LAMBDA / (2.0 *  n) * regAcc
-        return self.J / n + S
+        return (self.J / n) + S
 
     def updateCost(self, outputs, predictions):
         for out, pred in zip(outputs, predictions):
-            self.J += J(out, pred)
+            self.J += J(out[0], pred[0])
 
     def updateGrads(self, n):
-        for i in range(self.network):
+        for i in range(self.layers):
             P = self.LAMBDA * removeBiasMatrix(self.thetas[i])
             self.D[i] = (self.D[i] + P) * 1.0 / n
 
     def updateTethas(self, n):
-        for i in range(self.network):
+        for i in range(self.layers):
             self.thetas[i] = self.thetas[i] - self.ALPHA * self.D[i]
     
     def errorMeasure(self):
         err = 0
-        for i in range(self.network):
+        for i in range(self.layers):
             err += np.sum(self.D[i] ** 2)
         return err
 
@@ -123,7 +126,7 @@ class NeuralNetwork:
             for datapoint in dataset
         ]
         err = float('Inf')
-        for i in range(100):
+        for i in range(5000):
             print(self.trainTurn(dataset, True))
         #while err > self.STOP:
         #    err = 0

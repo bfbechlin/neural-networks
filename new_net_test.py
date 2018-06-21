@@ -101,8 +101,9 @@ class NeuralLayerTest(TestCase):
         #print(self.network.thetas)
 
     def test_correctLayers(self):
-        for i, thetas in enumerate(self.network.thetas):
-            assert_array_almost_equal(thetas, np.array(thetas[i]), decimal=5)
+
+        for i, _thetas in enumerate(self.network.thetas):
+            assert_array_almost_equal(_thetas, np.array(thetas[i]), decimal=5)
 
     def test_labelToOutputs(self):
         label0 = [
@@ -134,7 +135,7 @@ class NeuralLayerTest(TestCase):
 
     def test_batchGroups(self):
         dataset = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-        self.assertEqual(self.network._batchGroups(dataset), [[1,2,3], [4,5,6], [7,8,9], [10]])
+        self.assertEqual(self.network.batchGroups(dataset), [[1,2,3], [4,5,6], [7,8,9], [10]])
 
     def test_forwardPropagation(self):
         for example, predicted in zip(examples, predicteds):
@@ -143,40 +144,48 @@ class NeuralLayerTest(TestCase):
             assert_array_almost_equal(self.network.forwardPropagation(ex), pred, decimal=5)
 
     def test_backPropagation(self):
-        for example, output in zip(examples, outputs):
+        for i, (example, output) in enumerate(zip(examples, outputs)):
             ex = toVector(example)
             out = toVector(output)
             pred = self.network.forwardPropagation(ex)
-            print(self.network.a)
             self.network.backPropagation(pred - out)
-        
+            for j, D in enumerate(self.network.D):
+                assert_array_almost_equal(D, np.array(grads[i][j]), decimal=5)
+            self.network.reset()
+    
+    def test_upgradeGrads(self):
+        for i, (example, output) in enumerate(zip(examples, outputs)):
+            ex = toVector(example)
+            out = toVector(output)
+            pred = self.network.forwardPropagation(ex)
+            self.network.backPropagation(pred - out)
+        self.network.updateGrads(len(examples))
         for i, D in enumerate(self.network.D):
-            assert_array_almost_equal(D, np.array(grads[i]), decimal=5)
+            assert_array_almost_equal(D, np.array(gradsTotal[i]), decimal=5)
 
     def test_J(self):
         for i, (output, predicted) in enumerate(zip(outputs, predicteds)):
-            out = self.network._atributesToInputs(output)
-            pred = self.network._atributesToInputs(predicted)
-            Jvec = self.network._J(out, pred)
-            self.assertAlmostEqual(Jvec.sum(), J[i], places=3)
+            out = toVector(output)
+            pred = toVector(predicted)
+            self.network.updateCost(out, pred)
+            self.assertAlmostEqual(self.network.J, J[i], places=3)
+            self.network.reset()
 
     def test_cost_computation(self):
         for output, predicted in zip(outputs, predicteds):
-            out = self.network._atributesToInputs(output)
-            pred = self.network._atributesToInputs(predicted)
-            self.network.J += self.network._J(out, pred).sum()
+            out = toVector(output)
+            pred = toVector(predicted)
+            self.network.updateCost(out, pred)
         self.assertAlmostEqual(self.network.computeCost(len(outputs)), Jtotal, places=4)
 
     def test_trainTurn(self):
         datapoints = [
-            (self.network._atributesToInputs(input), self.network._atributesToInputs(output)) 
+            (toVector(input), toVector(output)) 
             for input, output in zip(examples, outputs)
         ]
-        err = self.network.trainTurn(datapoints)
-        for i, layer in enumerate(self.network.layers):
-            grad = layer.D
-            assert_array_almost_equal(grad, np.array(gradsTotal[i]), decimal=5)
-        # self.assertAlmostEqual(err, np.sum(grad**2), places=5)
+        self.network.trainTurn(datapoints)
+        for i, D in enumerate(self.network.D):
+            assert_array_almost_equal(D, np.array(gradsTotal[i]), decimal=5)
         err = self.network.trainTurn(datapoints, updateCost=True)
         self.assertAlmostEqual(self.network.computeCost(len(examples)), Jtotal, places=2)
 
