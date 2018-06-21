@@ -25,7 +25,10 @@ class CrossValidator(object):
         Run k cross-validation rounds so that metrics can be calculated.
         '''
         self._matrices = []
+        i = 0
         for t, v in self._test_and_validation_sets(dataset):
+            i += 1
+            print 'cv round:', i
             self.classifier.train(t)
             predicted = [self.classifier.classify(p) for p in v]
             matrix = self._build_confusion_matrix(predicted, list(data.labels(v)))
@@ -126,7 +129,7 @@ class CrossValidator(object):
             if l == label: # same column is the true positive
                 continue
             fp += c
-        return fp
+        return float(fp)
 
     def _fn(self, matrix, label):
         fn = 0
@@ -134,19 +137,19 @@ class CrossValidator(object):
             if l == label: # same row is the true positive
                 continue
             fn += r[label]
-        return fn
+        return float(fn)
 
     def _tp(self, matrix, label):
-        return matrix[label][label]
+        return float(matrix[label][label])
 
     def _tn(self, matrix, label):
-        return self._n(matrix) - self._tp(matrix, label) - self._fp(matrix, label) - self._fn(matrix, label)
+        return float(self._n(matrix) - self._tp(matrix, label) - self._fp(matrix, label) - self._fn(matrix, label))
 
     def _n(self, matrix):
         '''
         Return the number of datapoints given a confusion matrix.
         '''
-        return sum(c for c in [sum(r) for r in matrix])
+        return float(sum(c for c in [sum(r) for r in matrix]))
 
     def _create_matrix(self, n):
         '''

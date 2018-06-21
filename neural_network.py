@@ -14,7 +14,7 @@ class NeuralNetwork:
         for i, layer in enumerate(self.layers):
             print()
             print(layer.thetas)
-        
+
         self.J = 0
         self.K = K
         self.ALPHA = ALPHA
@@ -25,7 +25,7 @@ class NeuralNetwork:
         out = np.zeros((self.outputs, 1))
         out[label][0] = 1.0
         return out
-    
+
     def _outputsToLabel(self, output):
         maxValue = 0
         maxIndex = 0
@@ -116,10 +116,11 @@ class NeuralNetwork:
             print(layer.inputs)
             print(layer.outputs)
             print(layer.thetas)
-    
+
     def classify(self, datapoint):
         self.resetLayers()
         inputs = self._atributesToInputs(datapoint.attributes)
         preds = self.forwardPropagation(inputs)
+        print 'ou', self._outputsToLabel
         return self._outputsToLabel(preds)
 

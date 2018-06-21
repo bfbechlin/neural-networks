@@ -39,7 +39,7 @@ class NeuralNetwork:
         self.ALPHA = ALPHA
         self.LAMBDA = LAMBDA
         self.STOP = STOP
-    
+
     def reset(self):
         self.D = [np.zeros(size) for size in self.sizes]
         self.J = 0.0
@@ -48,7 +48,7 @@ class NeuralNetwork:
         out = np.zeros((self.outputs, 1))
         out[label][0] = 1.0
         return out
-        
+
     def outputsToLabel(self, outputs):
         maxValue = 0
         maxIndex = 0
@@ -72,7 +72,7 @@ class NeuralNetwork:
             z = np.dot(self.thetas[i], self.a[i])
             self.a[i+1] = G(z)
         return self.a[-1]
-    
+
     def backPropagation(self, delta):
         self.deltas[self.layers] = copy(delta)
         for j in reversed(range(1, self.layers + 1)):
@@ -102,7 +102,7 @@ class NeuralNetwork:
     def updateTethas(self, n):
         for i in range(self.layers):
             self.thetas[i] = self.thetas[i] - self.ALPHA * self.D[i]
-    
+
     def errorMeasure(self):
         err = 0
         for i in range(self.layers):
@@ -126,16 +126,15 @@ class NeuralNetwork:
             for datapoint in dataset
         ]
         err = float('Inf')
-        for i in range(5000):
-            print(self.trainTurn(dataset, True))
+        for i in range(500):
+            self.trainTurn(dataset, True)
         #while err > self.STOP:
         #    err = 0
         #    for batch in self.batchGroups(dataset):
         #        err += self.trainTurn(batch)
         #    print(err)
-    
+
     def classify(self, datapoint):
         inputs = toVector(datapoint.attributes)
         preds = self.forwardPropagation(inputs)
         return self.outputsToLabel(preds)
-    
