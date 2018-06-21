@@ -39,9 +39,11 @@ class NeuralNetwork:
         self.ALPHA = ALPHA
         self.LAMBDA = LAMBDA
         self.STOP = STOP
+        self.BETA = 0.8
 
     def reset(self):
         self.D = [np.zeros(size) for size in self.sizes]
+        self.zz = [0 for i in range(len(self.network))]
         self.J = 0.0
 
     def labelToOutputs(self, label):
@@ -101,7 +103,8 @@ class NeuralNetwork:
 
     def updateTethas(self, n):
         for i in range(self.layers):
-            self.thetas[i] = self.thetas[i] - self.ALPHA * self.D[i]
+            self.zz[i] = self.BETA*self.zz[i] + self.D[i]
+            self.thetas[i] = self.thetas[i] - self.ALPHA * self.zz[i]
 
     def errorMeasure(self):
         err = 0
@@ -126,7 +129,7 @@ class NeuralNetwork:
             for datapoint in dataset
         ]
         err = float('Inf')
-        for i in range(500):
+        for i in range(200):
             self.trainTurn(dataset, True)
         #while err > self.STOP:
         #    err = 0

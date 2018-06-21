@@ -28,7 +28,6 @@ class CrossValidator(object):
         i = 0
         for t, v in self._test_and_validation_sets(dataset):
             i += 1
-            print 'cv round:', i
             self.classifier.train(t)
             predicted = [self.classifier.classify(p) for p in v]
             matrix = self._build_confusion_matrix(predicted, list(data.labels(v)))

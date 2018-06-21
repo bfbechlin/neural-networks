@@ -19,15 +19,14 @@ def run(dataset_name, output_file, num_trees_range):
     inputs = len(dataset[0].attributes)
     outputs = max(data.labels(dataset)) + 1
 
-    network = NeuralNetwork([inputs, 8, outputs], ALPHA=0.1, STOP=0.1, LAMBDA=0.25, K=100)
-    cv = CrossValidator(k=5, classifier=network)
-    cv.run(dataset)
-    print mean(cv.f1s(1))
-    print mean(cv.accuracies(1))
-    print mean(cv.precisions(1))
-    print mean(cv.recalls(1))
-    print mean(cv.errors(1))
+    with open('f1_vs_lambda_'+dataset_name+'.csv', 'w') as file:
+        for lam in range(0, 100):
+            network = NeuralNetwork([inputs, 8, outputs], ALPHA=0.1, STOP=0.1, LAMBDA=lam/100.0, K=100)
+            cv = CrossValidator(k=10, classifier=network)
+            cv.run(dataset)
+            file.write(str(lam/100.0) + ',' + str(mean(cv.f1s(1))) + ',' + str(stdev(cv.f1s(1))) +'\n')
+            file.flush()
 
-for dataset_name in ['wine']:
+for dataset_name in ['wine', 'cancer', 'ionosphere']:
 
     run(dataset_name, 'f1-vs-num-trees-' + dataset_name + '.csv', [1, 2, 4, 8, 16, 32, 64, 128])
