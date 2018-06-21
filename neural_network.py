@@ -1,126 +1,143 @@
-from copy import copy
-import math
+from copy import deepcopy, copy
 import numpy as np
-from neural_layer import NeuralLayer
+import math
 
-def J_f(y, p):
+G = np.vectorize(lambda x: 1 / (1 + math.exp(-x)))
+def J(y, p):
     return -1.0 * (y * math.log(p) + (1 - y) * math.log(1 - p))
 
+def toVector(array):
+    return np.transpose(np.array([array]))
+
+def addBias(vec):
+    return np.vstack((1., vec))
+
+def removeBias(vec):
+    return np.array(np.delete(vec, (0), axis=0))
+
+def removeBiasMatrix(matrix):
+    cp = np.array(matrix)
+    cp[:, 0] = 0
+    return cp
+
 class NeuralNetwork:
-    def __init__(self, network, thetas=None, LAMBDA=0, ALPHA=0.001, K=0, STOP=0.001):
+    def __init__(self, network, thetas=None, LAMBDA=0, ALPHA=0.001, K=0, STOP=0.01, BETA=0.8):
+        self.network = network
         self.inputs = network[0]
         self.outputs = network[-1]
-        self.layers = [NeuralLayer(network[i], network[i+1], None if thetas is None else thetas[i]) for i in range(0, len(network)-1)]
-        for i, layer in enumerate(self.layers):
-            print()
-            print(layer.thetas)
+        self.layers = len(network) - 1
+        self.sizes = [(network[i+1], network[i] + 1) for i in range(0, len(network) - 1)]
+        if thetas is None:
+            self.thetas = [(np.random.rand(l, c) * 2 - 1.0) for (l, c) in self.sizes]
+        else:
+            self.thetas = [np.array(theta) for theta in thetas]
+        self.a = [None] * (self.layers + 1)
+        self.deltas = [None] * (self.layers + 1)
+        self.reset()
 
-        self.J = 0
         self.K = K
         self.ALPHA = ALPHA
         self.LAMBDA = LAMBDA
         self.STOP = STOP
+        self.BETA = BETA
 
-    def _labelToOutputs(self, label):
+    def reset(self):
+        self.D = [np.zeros(size) for size in self.sizes]
+        self.zz = [0] * (self.layers + 1)
+        self.J = 0.0
+
+    def labelToOutputs(self, label):
         out = np.zeros((self.outputs, 1))
         out[label][0] = 1.0
         return out
 
-    def _outputsToLabel(self, output):
+    def outputsToLabel(self, outputs):
         maxValue = 0
         maxIndex = 0
-        for i, row in enumerate(output):
+        for i, row in enumerate(outputs):
             value = row[0]
             if value > maxValue:
                 maxIndex = i
                 maxValue = value
         return maxIndex
 
-    def _atributesToInputs(self, attributes):
-        return np.transpose(np.array([attributes]))
-
-    def _batchGroups(self, dataset):
+    def batchGroups(self, dataset):
         if self.K == 0:
             return [dataset]
         else:
             return [dataset[i:i + self.K] for i in range(0, len(dataset), self.K)]
 
-    def _J(self, outputs, predictions):
-        J = np.zeros((self.outputs, 1))
-        for i, (out, pred) in enumerate(zip(outputs, predictions)):
-            J[i][0] = J_f(out, pred)
-        return J
-
     def forwardPropagation(self, inputs):
-        activations = inputs
-        for layer in self.layers:
-            activations = layer.computeActivations(activations)
-        return activations
+        self.a[0] = inputs
+        for i in range(self.layers):
+            self.a[i] = addBias(self.a[i])
+            z = np.dot(self.thetas[i], self.a[i])
+            self.a[i+1] = G(z)
+        return self.a[-1]
 
-    def backPropagation(self, lastDelta):
-        deltas = copy(lastDelta)
-        first = len(self.layers) - 1
-        for layer in reversed(self.layers):
-            layer.computeAndUpdateGrads(deltas)
-            deltas = copy(layer.computeDeltas(deltas))
-
-    def resetLayers(self):
-        self.J = 0
-        for layer in self.layers:
-            layer.reset()
-
-    def updateTethas(self, n):
-        gradsAcc = 0
-        for layer in self.layers:
-            grads = layer.updateThetas(n, self.ALPHA, self.LAMBDA)
-            gradsAcc += np.sum(grads ** 2)
-        return gradsAcc
+    def backPropagation(self, delta):
+        self.deltas[self.layers] = copy(delta)
+        for j in reversed(range(1, self.layers + 1)):
+            i = j - 1
+            confidence = (self.a[i] * (1 - self.a[i]))
+            delta = np.multiply(np.dot(np.transpose(self.thetas[i]), self.deltas[j]), confidence)
+            self.deltas[i] = np.delete(delta, (0), axis=0)
+        for i in range(self.layers):
+            self.D[i] = self.D[i] + np.dot(self.deltas[i + 1], np.transpose(self.a[i]))
 
     def computeCost(self, n):
-        J = float(self.J) / n
         regAcc = 0
-        for layer in self.layers:
-            regAcc += layer.computeRegularization()
-        S = float(self.LAMBDA) / (2.0 *  n) * regAcc
-        return J + S
+        for i in range(self.layers):
+            regAcc += np.sum(removeBiasMatrix(self.thetas[i]) ** 2)
+        S = self.LAMBDA / (2.0 *  n) * regAcc
+        return (self.J / n) + S
 
-    def trainTurn(self, datapoints, updateCost=False):
-        self.resetLayers()
-        for (inputs, outputs) in datapoints:
+    def updateCost(self, outputs, predictions):
+        for out, pred in zip(outputs, predictions):
+            self.J += J(out[0], pred[0])
+
+    def updateGrads(self, n):
+        for i in range(self.layers):
+            P = self.LAMBDA * removeBiasMatrix(self.thetas[i])
+            self.D[i] = (self.D[i] + P) * 1.0 / n
+
+    def updateTethas(self, n):
+        for i in range(self.layers):
+            self.zz[i] = self.BETA*self.zz[i] + self.D[i]
+            self.thetas[i] = self.thetas[i] - self.ALPHA * self.zz[i]
+
+    def errorMeasure(self):
+        err = 0
+        for i in range(self.layers):
+            err += np.sum(self.D[i] ** 2)
+        return err
+
+    def trainTurn(self, dataset, updateCost=False):
+        self.reset()
+        for (inputs, outputs) in dataset:
             predictions = self.forwardPropagation(inputs)
-            print('A')
-            #print(outputs)
-            print(predictions)
-            print(predictions - outputs)
             self.backPropagation(predictions - outputs)
-            #print(self.layers[-1].D)
             if updateCost:
-                self.J += np.sum(self._J(outputs, predictions))
-        a = self.updateTethas(len(datapoints))
-        #print(self.layers[-1].D)
-        return a
+                self.updateCost(outputs, predictions)
+        self.updateGrads(len(dataset))
+        self.updateTethas(len(dataset))
+        return self.computeCost(len(dataset))
 
     def train(self, dataset):
         dataset = [
-            [self._atributesToInputs(datapoint.attributes), self._labelToOutputs(datapoint.label)]
+            [toVector(datapoint.attributes), self.labelToOutputs(datapoint.label)]
             for datapoint in dataset
         ]
-        err = float('Inf')
-        for i in range(1):
-            err = 0
-            for batch in self._batchGroups(dataset):
-                err += self.trainTurn(batch)
-            print(err)
-
-        for layer in self.layers:
-            print(layer.inputs)
-            print(layer.outputs)
-            print(layer.thetas)
+        
+        return [self.trainTurn(dataset, True) for i in range(200)]
+        # err = float('Inf')    
+        #while err > self.STOP:
+        #    err = 0
+        #    for batch in self.batchGroups(dataset):
+        #        err += self.trainTurn(batch)
+        #    print(err)
 
     def classify(self, datapoint):
-        self.resetLayers()
-        inputs = self._atributesToInputs(datapoint.attributes)
+        inputs = toVector(datapoint.attributes)
         preds = self.forwardPropagation(inputs)
-        print 'ou', self._outputsToLabel
-        return self._outputsToLabel(preds)
-
+        return self.outputsToLabel(preds)

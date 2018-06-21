@@ -1,4 +1,4 @@
-from new_net import NeuralNetwork
+from neural_network import NeuralNetwork
 import data
 import random
 import utils
@@ -24,9 +24,10 @@ def run(dataset_name, output_file, num_trees_range):
             network = NeuralNetwork([inputs, 8, outputs], ALPHA=0.1, STOP=0.1, LAMBDA=lam/100.0, K=100)
             cv = CrossValidator(k=10, classifier=network)
             cv.run(dataset)
+            print(cv.f1s(1))
             file.write(str(lam/100.0) + ',' + str(mean(cv.f1s(1))) + ',' + str(stdev(cv.f1s(1))) +'\n')
             file.flush()
 
-for dataset_name in ['wine', 'cancer', 'ionosphere']:
+for dataset_name in ['pima', 'wine', 'cancer', 'ionosphere']:
 
     run(dataset_name, 'f1-vs-num-trees-' + dataset_name + '.csv', [1, 2, 4, 8, 16, 32, 64, 128])

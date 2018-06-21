@@ -16,7 +16,7 @@ class NeuralNetworkValidation:
     def backprogagation(self):
         net = NeuralNetwork(self.network, self.thetas, LAMBDA=self.LAMBDA, ALPHA=0)
         net.trainTurn(self.dataset)
-        return [layer.D for layer in net.layers]
+        return net.D
 
     def numericGrad(self, EPSILON=0.0000010000):
         result = copy.deepcopy(self.thetas)
