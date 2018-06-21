@@ -1,5 +1,5 @@
 from unittest import TestCase, main
-from new_net import NeuralNetwork, toVector
+from neural_network import NeuralNetwork, toVector
 import numpy as np
 from numpy.testing import assert_array_almost_equal
 from data import Datapoint
@@ -98,7 +98,6 @@ gradsTotal = (
 class NeuralLayerTest(TestCase):
     def setUp(self):
         self.network = NeuralNetwork(network, thetas, K=3, LAMBDA=0.250)
-        #print(self.network.thetas)
 
     def test_correctLayers(self):
 

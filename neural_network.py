@@ -21,7 +21,7 @@ def removeBiasMatrix(matrix):
     return cp
 
 class NeuralNetwork:
-    def __init__(self, network, thetas=None, LAMBDA=0, ALPHA=0.001, K=0, STOP=0.01, BETA=0.8):
+    def __init__(self, network, thetas=None, LAMBDA=0, ALPHA=0.001, K=0, STOP=200, BETA=0):
         self.network = network
         self.inputs = network[0]
         self.outputs = network[-1]
@@ -103,14 +103,8 @@ class NeuralNetwork:
 
     def updateTethas(self, n):
         for i in range(self.layers):
-            self.zz[i] = self.BETA*self.zz[i] + self.D[i]
+            self.zz[i] = self.BETA * self.zz[i] + self.D[i]
             self.thetas[i] = self.thetas[i] - self.ALPHA * self.zz[i]
-
-    def errorMeasure(self):
-        err = 0
-        for i in range(self.layers):
-            err += np.sum(self.D[i] ** 2)
-        return err
 
     def trainTurn(self, dataset, updateCost=False):
         self.reset()
@@ -128,14 +122,11 @@ class NeuralNetwork:
             [toVector(datapoint.attributes), self.labelToOutputs(datapoint.label)]
             for datapoint in dataset
         ]
-        
-        return [self.trainTurn(dataset, True) for i in range(200)]
-        # err = float('Inf')    
-        #while err > self.STOP:
-        #    err = 0
-        #    for batch in self.batchGroups(dataset):
-        #        err += self.trainTurn(batch)
-        #    print(err)
+
+        Js = []
+        for i in range(self.STOP):
+            Js.append([self.trainTurn(batch) for batch in self.batchGroups(dataset)])
+        return Js
 
     def classify(self, datapoint):
         inputs = toVector(datapoint.attributes)
