@@ -1,7 +1,7 @@
 import copy
 from utils import encode_matrix_list
 import numpy as np
-from neural_network import NeuralNetwork
+from new_net import NeuralNetwork
 
 def columnVector(array):
     return np.vstack(np.array(array))
@@ -16,7 +16,7 @@ class NeuralNetworkValidation:
     def backprogagation(self):
         net = NeuralNetwork(self.network, self.thetas, LAMBDA=self.LAMBDA, ALPHA=0)
         net.trainTurn(self.dataset)
-        return [layer.D for layer in net.layers]
+        return net.D
 
     def numericGrad(self, EPSILON=0.0000010000):
         result = copy.deepcopy(self.thetas)

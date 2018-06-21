@@ -1,4 +1,4 @@
-from new_net import NeuralNetwork
+from neural_network import NeuralNetwork
 import data
 import random
 import utils
@@ -19,7 +19,7 @@ def run(dataset_name, output_file, num_trees_range):
     print(dataset[0])
     
     print(dataset[-1])
-    network = NeuralNetwork([inputs, 8, outputs], ALPHA=1, STOP=0.1, LAMBDA=0, K=100)
+    network = NeuralNetwork([inputs, 8, outputs], ALPHA=5, STOP=0.1, LAMBDA=0, K=100)
     network.train(dataset)
     errors = 0
     for datapoint in dataset:
@@ -28,6 +28,6 @@ def run(dataset_name, output_file, num_trees_range):
             print(datapoint.label)
     print(errors, errors * 1.0 /len(dataset))
 
-for dataset_name in ['pima']:
+for dataset_name in ['wine']:
 
     run(dataset_name, 'f1-vs-num-trees-' + dataset_name + '.csv', [1, 2, 4, 8, 16, 32, 64, 128])
