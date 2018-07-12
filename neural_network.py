@@ -132,3 +132,12 @@ class NeuralNetwork:
         inputs = toVector(datapoint.attributes)
         preds = self.forwardPropagation(inputs)
         return self.outputsToLabel(preds)
+    
+    def verifyPerformance(self, datapoint):
+        inputs = toVector(datapoint.attributes)
+        outputs = self.labelToOutputs(datapoint.label)
+        predictions = self.forwardPropagation(inputs)
+        _J = 0
+        for out, pred in zip(outputs, predictions):
+            _J += J(out[0], pred[0])
+        return _J
